@@ -22,16 +22,6 @@ ENV ANDROID_HOME=/opt/android
 ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
 ENV ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/$NDK_VERSION
 
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /etc/environment; \
-        ln -sf /usr/lib/jvm/java-17-openjdk-amd64 /usr/lib/jvm/default-java; \
-    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64" >> /etc/environment; \
-        ln -sf /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/default-java; \
-    fi
-
-ENV JAVA_HOME=/usr/lib/jvm/default-java
-
 ENV CMAKE_BIN_PATH=${ANDROID_HOME}/cmake/$CMAKE_VERSION/bin
 
 ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${PATH}
@@ -71,6 +61,16 @@ RUN apt update -qq && apt install -qq -y --no-install-recommends \
     && gem install bundler \
     && rm -rf /var/lib/apt/lists/*;
 
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+    echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /etc/environment; \
+    ln -sf /usr/lib/jvm/java-17-openjdk-amd64 /usr/lib/jvm/default-java; \
+elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64" >> /etc/environment; \
+    ln -sf /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/default-java; \
+fi
+
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+
 # install nodejs using n
 RUN curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n \
     && bash n $NODE_VERSION \
@@ -85,12 +85,21 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
     && unzip -q -d ${ANDROID_HOME}/cmdline-tools /tmp/sdk.zip \
     && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest \
     && rm /tmp/sdk.zip \
-    && yes | sdkmanager --licenses \
-    && yes | sdkmanager "platform-tools" \
-        "platforms;android-$ANDROID_BUILD_VERSION" \
-        "build-tools;$ANDROID_TOOLS_VERSION" \
-        "cmake;$CMAKE_VERSION" \
-        "ndk;$NDK_VERSION" \
+    && if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+          JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 yes | sdkmanager --licenses && \
+          JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 yes | sdkmanager "platform-tools" \
+              "platforms;android-$ANDROID_BUILD_VERSION" \
+              "build-tools;$ANDROID_TOOLS_VERSION" \
+              "cmake;$CMAKE_VERSION" \
+              "ndk;$NDK_VERSION"; \
+       elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+          JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 yes | sdkmanager --licenses && \
+          JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 yes | sdkmanager "platform-tools" \
+              "platforms;android-$ANDROID_BUILD_VERSION" \
+              "build-tools;$ANDROID_TOOLS_VERSION" \
+              "cmake;$CMAKE_VERSION" \
+              "ndk;$NDK_VERSION"; \
+       fi \
     && rm -rf ${ANDROID_HOME}/.android \
     && chmod 777 -R /opt/android
 
