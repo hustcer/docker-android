@@ -22,14 +22,16 @@ ENV ANDROID_HOME=/opt/android
 ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
 ENV ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/$NDK_VERSION
 
-# 根据目标平台设置 JAVA_HOME
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
         echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /etc/environment; \
+        ln -sf /usr/lib/jvm/java-17-openjdk-amd64 /usr/lib/jvm/default-java; \
     elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
         echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64" >> /etc/environment; \
+        ln -sf /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/default-java; \
     fi
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+
 ENV CMAKE_BIN_PATH=${ANDROID_HOME}/cmake/$CMAKE_VERSION/bin
 
 ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${PATH}
