@@ -28,16 +28,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
         echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64" >> /etc/environment; \
     fi
 
-ENV JAVA_HOME=
-
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-      ln -sf /usr/lib/jvm/java-17-openjdk-amd64 /usr/lib/jvm/default-java; \
-    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-      ln -sf /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/default-java; \
-    fi
-
-ENV JAVA_HOME=/usr/lib/jvm/default-java
-
+ENV JAVA_HOME=${TARGETPLATFORM:+${TARGETPLATFORM/linux\/amd64//usr/lib/jvm/java-17-openjdk-amd64}${TARGETPLATFORM/linux\/arm64//usr/lib/jvm/java-17-openjdk-arm64}}
 ENV CMAKE_BIN_PATH=${ANDROID_HOME}/cmake/$CMAKE_VERSION/bin
 
 ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${PATH}
