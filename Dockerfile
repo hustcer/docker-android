@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM ubuntu:22.04
+FROM ubuntu:22.04
 
 LABEL Description="This image provides a base Android development environment for React Native, and may be used to run tests."
 
@@ -13,8 +13,7 @@ ARG NDK_VERSION=27.1.12297006
 ARG NODE_VERSION=20.18
 ARG WATCHMAN_VERSION=4.9.0
 ARG CMAKE_VERSION=3.30.5
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
+ARG TARGETARCH
 
 # set default environment variables, please don't remove old env for compatibilty issue
 ENV ADB_INSTALL_TIMEOUT=10
@@ -22,13 +21,7 @@ ENV ANDROID_HOME=/opt/android
 ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
 ENV ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/$NDK_VERSION
 
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /etc/environment; \
-    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64" >> /etc/environment; \
-    fi
-
-ENV JAVA_HOME=${TARGETPLATFORM:+${TARGETPLATFORM/linux\/amd64//usr/lib/jvm/java-17-openjdk-amd64}${TARGETPLATFORM/linux\/arm64//usr/lib/jvm/java-17-openjdk-arm64}}
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
 ENV CMAKE_BIN_PATH=${ANDROID_HOME}/cmake/$CMAKE_VERSION/bin
 
 ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${PATH}
